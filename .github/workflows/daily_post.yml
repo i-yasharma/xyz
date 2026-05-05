@@ -26,7 +26,6 @@ jobs:
 
     - name: Run script
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
         LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
         EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}

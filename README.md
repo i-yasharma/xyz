@@ -11,7 +11,6 @@ This project automates posting to LinkedIn and sending an email notification, da
 
 2. **Environment Variables**:
    You need to set the following environment variables (or configure them as repository secrets for GitHub Actions):
-   - `OPENAI_API_KEY`: Your OpenAI API Key for generating content.
    - `LINKEDIN_ACCESS_TOKEN`: The OAuth2 access token for the LinkedIn API.
    - `LINKEDIN_PERSON_URN`: Your LinkedIn profile URN (e.g., `urn:li:person:YOUR_ID`).
    - `EMAIL_SENDER`: The email address from which notifications will be sent (e.g., your Gmail).

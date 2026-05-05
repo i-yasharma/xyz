@@ -1,13 +1,12 @@
 import os
 import json
 import smtplib
+import urllib.parse
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
-from openai import OpenAI
 
 # Environment variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LINKEDIN_ACCESS_TOKEN = os.getenv("LINKEDIN_ACCESS_TOKEN")
 LINKEDIN_PERSON_URN = os.getenv("LINKEDIN_PERSON_URN")
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
@@ -16,34 +15,35 @@ EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
 
 def generate_content():
-    """Generates a topic and a LinkedIn post using OpenAI API."""
-    if not OPENAI_API_KEY:
-        print("Missing OPENAI_API_KEY. Skipping content generation.")
-        return "Test Topic", "This is a test post because the API key is missing.\n\nEnjoy!"
-
-    client = OpenAI(api_key=OPENAI_API_KEY)
-
+    """Generates a topic and a LinkedIn post using a free AI API."""
     prompt = (
         "You are Yash Sharma, a B.Tech CSE student specializing in AI engineering. "
         "Every day you write a LinkedIn post about a new topic in the AI engineering domain. "
         "Generate today's topic and a humanized LinkedIn post. The post should not be a single huge paragraph; "
         "use line breaks and spaces to make it readable and authentic. Write it in the first person. "
         "Make it engaging, relatable for students and professionals, and informative.\n\n"
-        "Return the result as a JSON object with two keys: 'topic' (a short string) and 'post' (the formatted post text)."
+        "Return the result exactly as a valid JSON object with two keys: 'topic' (a short string) and 'post' (the formatted post text). "
+        "Do not wrap the JSON in markdown code blocks."
     )
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",  # or gpt-3.5-turbo if preferred
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that outputs JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={"type": "json_object"}
-        )
+    url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}?json=true"
 
-        content = response.choices[0].message.content
-        data = json.loads(content)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        try:
+            data = response.json()
+        except ValueError:
+            # If the response isn't already a JSON object, maybe the text field contains the JSON string
+            import re
+            content_str = response.text
+            # Try to extract JSON from within markdown blocks if present
+            json_match = re.search(r'```json\n(.*?)\n```', content_str, re.DOTALL)
+            if json_match:
+                content_str = json_match.group(1)
+            data = json.loads(content_str)
+
         return data.get("topic", "AI Engineering Topic"), data.get("post", "Post content unavailable.")
     except Exception as e:
         print(f"Error generating content: {e}")
